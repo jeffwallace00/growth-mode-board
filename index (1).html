@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Growth Mode — Agency Launch Board</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #161616;
+    --surface2: #1e1e1e;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.14);
+    --text: #f0ede8;
+    --muted: #888;
+    --faint: #444;
+    --green: #4ade80;
+    --blue: #60a5fa;
+    --gray: #555;
+    --green-bg: rgba(74,222,128,0.08);
+    --blue-bg: rgba(96,165,250,0.08);
+    --accent: #f0ede8;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  header {
+    padding: 2rem 2rem 1.5rem;
+    border-bottom: 0.5px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: .02em;
+  }
+
+  .logo span { color: var(--muted); }
+
+  .header-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--faint);
+    letter-spacing: .05em;
+  }
+
+  .progress-bar-wrap {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .progress-bar {
+    width: 120px;
+    height: 3px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: 2px;
+    transition: width .4s ease;
+  }
+
+  .progress-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .board {
+    padding: 1.5rem 2rem 4rem;
+    overflow-x: auto;
+  }
+
+  .cols {
+    display: flex;
+    gap: 10px;
+    min-width: 1020px;
+    align-items: flex-start;
+  }
+
+  .col {
+    width: 168px;
+    flex-shrink: 0;
+  }
+
+  .col-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2px 10px;
+  }
+
+  .col-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+
+  .col-count {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--faint);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    position: relative;
+  }
+
+  .card:hover {
+    border-color: var(--border-hover);
+    background: var(--surface2);
+  }
+
+  .card-title {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.4;
+    margin-bottom: 8px;
+    font-weight: 400;
+  }
+
+  .card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .status-dot {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .status-text {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .check-progress {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--faint);
+  }
+
+  .check-progress.complete { color: var(--green); }
+
+  /* overlay */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.7);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .overlay.open { display: flex; }
+
+  .drawer {
+    background: var(--surface);
+    border: 0.5px solid var(--border-hover);
+    border-radius: 12px;
+    padding: 1.75rem;
+    width: 440px;
+    max-width: 100%;
+    max-height: 88vh;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  .drawer-phase {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--faint);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: 6px;
+  }
+
+  .drawer-title {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 1rem;
+    line-height: 1.3;
+  }
+
+  .drawer-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 0.5px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+  }
+
+  .close-btn {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    background: none;
+    border: none;
+    color: var(--faint);
+    font-size: 20px;
+    cursor: pointer;
+    line-height: 1;
+    transition: color .1s;
+  }
+
+  .close-btn:hover { color: var(--text); }
+
+  .section { margin-bottom: 1.25rem; }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--faint);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: 8px;
+  }
+
+  .notes-text {
+    font-size: 13px;
+    color: #999;
+    line-height: 1.65;
+  }
+
+  .checklist { list-style: none; }
+
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 5px 0;
+    font-size: 13px;
+    color: #999;
+    line-height: 1.4;
+    border-bottom: 0.5px solid var(--border);
+    cursor: pointer;
+    transition: color .1s;
+  }
+
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li:hover { color: var(--text); }
+
+  .check-box {
+    width: 15px;
+    height: 15px;
+    border: 0.5px solid var(--faint);
+    border-radius: 3px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s, border-color .15s;
+  }
+
+  .checklist li.done-item { color: var(--faint); text-decoration: line-through; }
+  .checklist li.done-item .check-box {
+    background: var(--green-bg);
+    border-color: var(--green);
+  }
+
+  .check-tick {
+    font-size: 10px;
+    color: var(--green);
+    display: none;
+  }
+
+  .done-item .check-tick { display: block; }
+
+  .status-select-wrap { margin-bottom: 1.25rem; }
+
+  .status-select {
+    background: var(--surface2);
+    border: 0.5px solid var(--border-hover);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 6px 10px;
+    cursor: pointer;
+    outline: none;
+    width: 100%;
+  }
+
+  .status-select option { background: #1e1e1e; }
+
+  .notes-edit {
+    width: 100%;
+    background: var(--surface2);
+    border: 0.5px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: 10px;
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+    line-height: 1.6;
+    transition: border-color .15s;
+  }
+
+  .notes-edit:focus { border-color: var(--border-hover); }
+
+  .save-btn {
+    width: 100%;
+    padding: 9px;
+    background: var(--surface2);
+    border: 0.5px solid var(--border-hover);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background .15s;
+    margin-top: 1rem;
+  }
+
+  .save-btn:hover { background: rgba(255,255,255,0.07); }
+
+  .saved-toast {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--green);
+    text-align: center;
+    margin-top: 6px;
+    opacity: 0;
+    transition: opacity .3s;
+  }
+
+  .saved-toast.show { opacity: 1; }
+
+  .divider {
+    height: 0.5px;
+    background: var(--border);
+    margin: 1.25rem 0;
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">growth<span>/</span>mode <span>·</span> agency launch</div>
+  <div class="header-meta">BOARD v1</div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
+    <div class="progress-label" id="prog-label">0%</div>
+  </div>
+</header>
+
+<div class="board">
+  <div class="cols" id="cols"></div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="drawer" id="drawer">
+    <button class="close-btn" id="close-btn">×</button>
+    <div id="drawer-content"></div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'gmd_board_v1';
+
+const defaultData = [
+  {id:"warmup",label:"Inbox warmup",cards:[
+    {id:"w1",title:"30 domains configured",status:"done",notes:"Smartlead + InboxKit setup complete. 60 inboxes across 30 domains.",
+     checks:[{t:"Domains purchased",d:true},{t:"DNS records (SPF/DKIM/DMARC) set",d:true},{t:"Inboxes connected to Smartlead",d:true},{t:"Warm-up sequences running",d:true},{t:"Warm-up period complete",d:true}]},
+    {id:"w2",title:"Deliverability check",status:"done",notes:"Verify sender reputation before sending live campaigns.",
+     checks:[{t:"MXToolbox health check",d:true},{t:"Spam score test (mail-tester.com)",d:true},{t:"Inbox placement test",d:false}]}
+  ]},
+  {id:"setup",label:"Setup",cards:[
+    {id:"s1",title:"VSL video edited + uploaded",status:"active",notes:"Video needs final edit and embed on landing page (aura.build). Blocker for outreach.",
+     checks:[{t:"Raw recording complete",d:true},{t:"Video edited",d:false},{t:"Uploaded to Loom or Vimeo",d:false},{t:"Embed code added to landing page",d:false}]},
+    {id:"s2",title:"Landing page live",status:"active",notes:"Built on aura.build. Needs VSL embed before sending traffic.",
+     checks:[{t:"Copy written",d:true},{t:"Page built on aura.build",d:true},{t:"VSL embedded",d:false},{t:"CTA and calendar link working",d:false}]}
+  ]},
+  {id:"niche",label:"Niche + offer",cards:[
+    {id:"n1",title:"Niche selected",status:"todo",notes:"Narrow to one niche. Validate volume in Apollo. Consider healthcare niches tested previously vs. new targets.",
+     checks:[{t:"Brainstorm 3-5 niche options",d:false},{t:"Check Apollo volume per niche",d:false},{t:"Validate pain point + urgency",d:false},{t:"Final niche decision made",d:false}]},
+    {id:"n2",title:"Offer defined",status:"todo",notes:"Nail the one-liner: outcome, timeframe, guarantee. Must connect to niche pain.",
+     checks:[{t:"Outcome stated clearly",d:false},{t:"Timeframe included",d:false},{t:"Risk reversal or guarantee added",d:false},{t:"Tested in Client Ascension feedback",d:false}]}
+  ]},
+  {id:"leads",label:"Lead gen",cards:[
+    {id:"l1",title:"Lead list built in Apollo",status:"todo",notes:"Target list based on selected niche. Aim for 1,000-2,000 verified leads before first campaign.",
+     checks:[{t:"ICP filters set in Apollo",d:false},{t:"Email verification run",d:false},{t:"List exported as CSV",d:false},{t:"Uploaded to Smartlead campaign",d:false}]}
+  ]},
+  {id:"sequences",label:"Sequences",cards:[
+    {id:"q1",title:"Email sequence written",status:"todo",notes:"4-6 step sequence: hook, pain, proof, CTA. Keep it short. Personalization at the top.",
+     checks:[{t:"Step 1 (opener) written",d:false},{t:"Steps 2-4 (follow-ups) written",d:false},{t:"Steps 5-6 (breakup) written",d:false},{t:"Reviewed against CA framework",d:false}]},
+    {id:"q2",title:"Sequence uploaded to Smartlead",status:"todo",notes:"Map each step to the correct delay. Set sending windows (weekdays, business hours).",
+     checks:[{t:"Campaign created in Smartlead",d:false},{t:"All steps uploaded",d:false},{t:"Sending schedule configured",d:false},{t:"Test email sent and checked",d:false}]}
+  ]},
+  {id:"launch",label:"Launch",cards:[
+    {id:"lx1",title:"Send first campaign",status:"todo",notes:"Start with 200-300 leads to test deliverability and reply rate before scaling.",
+     checks:[{t:"Campaign reviewed end to end",d:false},{t:"First batch of 200-300 leads assigned",d:false},{t:"Campaign activated",d:false},{t:"Replies monitored daily",d:false},{t:"Stats reviewed at day 3 and day 7",d:false}]}
+  ]}
+];
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(defaultData));
+}
+
+function save(data) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+}
+
+let data = load();
+let activeCard = null;
+let activeCol = null;
+
+const statusColor = { done: '#4ade80', active: '#60a5fa', todo: '#555' };
+const statusLabel = { done: 'Done', active: 'In progress', todo: 'To do' };
+
+function totalChecks() {
+  let done = 0, total = 0;
+  data.forEach(col => col.cards.forEach(card => {
+    card.checks.forEach(c => { total++; if (c.d) done++; });
+  }));
+  return { done, total };
+}
+
+function renderProgress() {
+  const { done, total } = totalChecks();
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-label').textContent = pct + '%';
+}
+
+function renderBoard() {
+  const container = document.getElementById('cols');
+  container.innerHTML = '';
+  data.forEach(col => {
+    const el = document.createElement('div');
+    el.className = 'col';
+    const doneCount = col.cards.filter(c => c.status === 'done').length;
+    el.innerHTML = `<div class="col-head"><span class="col-label">${col.label}</span><span class="col-count">${doneCount}/${col.cards.length}</span></div>`;
+    col.cards.forEach(card => {
+      const doneChecks = card.checks.filter(c => c.d).length;
+      const total = card.checks.length;
+      const allDone = doneChecks === total;
+      const c = document.createElement('div');
+      c.className = 'card';
+      c.innerHTML = `
+        <div class="card-title">${card.title}</div>
+        <div class="card-foot">
+          <div class="status-dot">
+            <div class="dot" style="background:${statusColor[card.status]}"></div>
+            <span class="status-text">${statusLabel[card.status]}</span>
+          </div>
+          <span class="check-progress${allDone?' complete':''}">${doneChecks}/${total}</span>
+        </div>`;
+      c.onclick = () => openDrawer(col, card);
+      el.appendChild(c);
+    });
+    container.appendChild(el);
+  });
+  renderProgress();
+}
+
+function openDrawer(col, card) {
+  activeCol = col;
+  activeCard = card;
+  renderDrawer();
+  document.getElementById('overlay').classList.add('open');
+}
+
+function renderDrawer() {
+  const card = activeCard;
+  const col = activeCol;
+  const doneChecks = card.checks.filter(c => c.d).length;
+  const dc = document.getElementById('drawer-content');
+  dc.innerHTML = `
+    <div class="drawer-phase">${col.label}</div>
+    <div class="drawer-title">${card.title}</div>
+    <div class="status-select-wrap">
+      <select class="status-select" id="status-select">
+        <option value="todo"${card.status==='todo'?' selected':''}>To do</option>
+        <option value="active"${card.status==='active'?' selected':''}>In progress</option>
+        <option value="done"${card.status==='done'?' selected':''}>Done</option>
+      </select>
+    </div>
+    <div class="section">
+      <div class="section-label">Notes</div>
+      <textarea class="notes-edit" id="notes-edit" placeholder="Add notes...">${card.notes}</textarea>
+    </div>
+    <div class="section">
+      <div class="section-label">Checklist — ${doneChecks}/${card.checks.length}</div>
+      <ul class="checklist" id="checklist">
+        ${card.checks.map((c,i) => `
+          <li class="${c.d?'done-item':''}" data-i="${i}">
+            <div class="check-box"><span class="check-tick">✓</span></div>
+            <span>${c.t}</span>
+          </li>`).join('')}
+      </ul>
+    </div>
+    <button class="save-btn" id="save-btn">Save changes</button>
+    <div class="saved-toast" id="saved-toast">Saved</div>`;
+
+  document.getElementById('status-select').onchange = e => {
+    card.status = e.target.value;
+  };
+
+  document.getElementById('checklist').onclick = e => {
+    const li = e.target.closest('li');
+    if (!li) return;
+    const i = parseInt(li.dataset.i);
+    card.checks[i].d = !card.checks[i].d;
+    renderDrawer();
+  };
+
+  document.getElementById('save-btn').onclick = () => {
+    card.notes = document.getElementById('notes-edit').value;
+    save(data);
+    renderBoard();
+    const toast = document.getElementById('saved-toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1800);
+  };
+}
+
+document.getElementById('close-btn').onclick = () => {
+  document.getElementById('overlay').classList.remove('open');
+};
+
+document.getElementById('overlay').onclick = e => {
+  if (e.target === document.getElementById('overlay')) {
+    document.getElementById('overlay').classList.remove('open');
+  }
+};
+
+renderBoard();
+</script>
+</body>
+</html>
